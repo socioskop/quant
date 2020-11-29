@@ -74,6 +74,7 @@ for i in range(0, len(ts)):
     # write to local storage
     d.to_sql('raw', conn, if_exists='append', index=False)
 
+    # status on raw data download
     if (i/100 == round(i/100)):
         print("raw data for ticker ", ts[i], " is ok. (" + str(i), " of ", len(ts), ")", sep='')
 
