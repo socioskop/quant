@@ -1,4 +1,4 @@
-# main program for retrieving data, learning and predicting stock market returns
+# ticker indexing for quant modeling setup
 import tiingo as tngo
 import os
 import env_file
@@ -54,6 +54,7 @@ szse500.sector = szse500.sector.replace("P    Education", "R    Media") # moves 
 szse500.sector = szse500.sector.replace("S    Conglomerates", "K    Real Estate")   # only one conglomerate. Could go anywhere, but reit for now
 szse500.sector = szse500.sector.replace("M    Research & Development", "Q    Public Health") # same same
 
+# write ticker list to database
 szse500[szse500.ticker.isin(tickers.ticker)].to_sql('tickers', conn, if_exists='append', index=False) # append to existing ticker list
 
 # check out that things are as expected: sql table is present
