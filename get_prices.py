@@ -14,7 +14,7 @@ cursor = conn.cursor()
 # add keys and other local environment variables manually
 env_file.load('.env')
 
-# open tiingo session
+# open tiingo session - keep key as export in ./.env
 print("Tiingo key ok? :", len(os.environ['TIINGO_API_KEY'])>0)
 config = {} # Tiingo session configuration dictionary
 config['session'] = True # stay in session across api calls
@@ -69,6 +69,7 @@ for i in range(0, len(ts)):
     d = client.get_dataframe(str(ts[i]), startDate=init_tmp, endDate=dates["endd"])
     d["date"] = d.index.strftime('%Y-%m-%d')    # add date as column
     d["ticker"] = ts[i]                         # add ticker as column
+    d = d.drop_duplicates()                     # remove weird duplicates
     d = d[['date', 'ticker', 'adjClose', 'adjHigh', 'adjLow', 'adjOpen', 'adjVolume', 'divCash']]
 
     # write to local storage
@@ -77,5 +78,8 @@ for i in range(0, len(ts)):
     # status on raw data download
     if (i/100 == round(i/100)):
         print("raw data for ticker ", ts[i], " is ok. (" + str(i), " of ", len(ts), ")", sep='')
+
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+print(cursor.fetchall())
 
 print("done getting raw ticker data")
