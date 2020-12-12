@@ -74,7 +74,9 @@ for sector in set(sectors):
         u.append(tmp)
         del tmp
 
-    d = pd.concat(u, axis=1)                # concat the list elements holding qMA
+    u = pd.concat(u, axis=1)                # concat the list elements holding qMA
+    u = u.loc[:,~u.columns.duplicated()]    # remove duped date/ticker columns
+    d = pd.concat([d, u], ignore_index=True)# and again with running d holder
     d = d.loc[:,~d.columns.duplicated()]    # remove duped date/ticker columns
 
     # sector performance indicator
