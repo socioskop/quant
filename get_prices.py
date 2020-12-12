@@ -3,8 +3,9 @@
 import tiingo as tngo
 import os
 import env_file
-import pandas as pd
 import sqlite3
+import numpy as np
+import pandas as pd
 from datetime import datetime
 
 # connect to database (will be created on first run)
@@ -26,15 +27,21 @@ tickers = pd.read_sql_query("SELECT * FROM tickers", conn)
 ts = pd.Series(tickers.ticker.unique())
 
 # touch sql storage
+# wipe data once a week
+if datetime.today().weekday() == 5:
+    cursor.execute("DROP TABLE IF EXISTS raw;")
+
 touch = '''CREATE TABLE IF NOT EXISTS raw (
-	    date      TEXT,
-	    ticker    TEXT,
-	    adjClose  REAL,
-	    adjOpen   REAL,
-	    adjHigh   REAL,
-	    adjLow    REAL,
-	    adjVolume REAL,
-	    divCash   REAL
+	    date        TEXT,
+	    ticker      TEXT,
+	    adjClose    REAL,
+	    adjOpen     REAL,
+	    adjHigh     REAL,
+	    adjLow      REAL,
+	    adjVolume   REAL,
+	    divCash     REAL,
+	    outc25      REAL,
+	    outc50      REAL
 	    );'''
 
 cursor.execute(touch)
@@ -60,7 +67,7 @@ for i in range(0, len(ts)):
     if datetime.today().weekday()!=5 and len(dates_covered)>500:
         init_tmp = max(dates_covered)
         if init_tmp.strftime('%Y-%m-%d')>=dates["endd"]:
-            continue
+            pass
         #d = d[-d["date"].isin(dates_covered)] # would be after data download
     else:
         init_tmp = dates["init"]
@@ -71,9 +78,14 @@ for i in range(0, len(ts)):
     d["ticker"] = ts[i]                         # add ticker as column
     d = d.drop_duplicates()                     # remove weird duplicates
     d = d[['date', 'ticker', 'adjClose', 'adjHigh', 'adjLow', 'adjOpen', 'adjVolume', 'divCash']]
+    d.sort_index(inplace=True)
+
+    # generate outcome columns
+    for o in [25, 50]:
+        d["outc"+str(o).zfill(2)] = np.log(d["adjClose"]/d["adjClose"].shift(-o))
 
     # write to local storage
-    d.to_sql('raw', conn, if_exists='append', index=False)
+    d.to_sql('raw', conn, if_exists="append", index=False)
 
     # status on raw data download
     if (i/100 == round(i/100)):
