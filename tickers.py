@@ -1,19 +1,18 @@
 # ticker indexing for quant modeling setup
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import tiingo as tngo
 import os
-import env_file
 import pandas as pd
 import sqlite3
 
 # connect to database (will be created on first run)
-conn   = sqlite3.connect('quant.db')
+conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
 cursor = conn.cursor()
 
-# add keys and other local environment variables manually
-env_file.load('.env')
-
 # open tiingo session
-print("Tiingo key ok? :", len(os.environ['TIINGO_API_KEY'])>0)
 config = {} # Tiingo session configuration dictionary
 config['session'] = True # stay in session across api calls
 config['api_key'] = os.environ['TIINGO_API_KEY']
@@ -23,25 +22,39 @@ client = tngo.TiingoClient(config)
 tickers = pd.DataFrame(client.list_tickers())
 
 # country wise ticker lists
+# SPDRS+ indices
+indices = pd.DataFrame({'ticker': ["SPY", "GLD", "XLK", "DIA", "XLV", "XLF", "XLY", "SDY", "MDY", "XLI", "XLP", "XLU", "JNK", "XLC", "XLE", "SPYG", "XBI"]})
+indices["date"] = "1970-01-01"
+indices["name"] = "INDEX"
+
 # us sp500 tickers + historical sp500 entries
 sp500=pd.read_csv('https://raw.githubusercontent.com/leosmigel/analyzingalpha/master/sp500-historical-components-and-changes/sp500_history.csv',
                   usecols=['date', 'name', 'value'])
 sp500.columns = ["date", "name", "ticker"]
+sp500 = pd.concat([sp500, indices])
 sp500['universe'] = "SP500"
 
 # reading spdr sector codes, including outside of current sp500 to minimize bias in sample
-spy     = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx", skiprows=4)
-onev    = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-onev.xlsx", skiprows=4)
-oneo    = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-oneo.xlsx", skiprows=4)
-oney    = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-oney.xlsx", skiprows=4)
+spy     = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-spy.xlsx", engine='openpyxl', skiprows=4)
+onev    = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-onev.xlsx", engine='openpyxl', skiprows=4)
+oneo    = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-oneo.xlsx", engine='openpyxl', skiprows=4)
+oney    = pd.read_excel("https://www.ssga.com/us/en/institutional/etfs/library-content/products/fund-data/etfs/us/holdings-daily-us-en-oney.xlsx", engine='openpyxl', skiprows=4)
 sctrs   = pd.concat([spy, onev, oneo, oney])
 
 # format sector data and merge with ticker list
-sctrs   = sctrs[["Ticker", "Sector"]]
 sctrs.columns   = sctrs.columns.str.lower()
-sp500           = pd.merge(sp500, sctrs, on="ticker").drop_duplicates()
+sctrs   = sctrs[["ticker", "sector"]]
+sctrs["sector"] = sctrs["sector"].replace(["Technology"], 'Information Technology')
 
-# push  sp500 universe ticker list to sql db
+# add INDEX as sector
+spdrs = pd.DataFrame({'ticker': indices["ticker"]})
+spdrs["sector"] = "INDEX"
+sctrs = pd.concat([sctrs, spdrs]).drop_duplicates()
+sp500           = pd.merge(sp500[["name", "ticker", "universe"]],
+                           sctrs, on="ticker").drop_duplicates()
+sp500 = sp500.sort_values("ticker")
+
+# push sp500 universe ticker list to sql db
 sp500[sp500.ticker.isin(tickers.ticker)].to_sql('tickers', conn, if_exists='replace', index=False)
 
 # chine szse500 tickers, only current, includes bias (growth/survivorship)
@@ -65,11 +78,3 @@ print(cursor.fetchall())
 tickers = pd.read_sql_query("SELECT * FROM tickers", conn)
 print(tickers.universe.value_counts())
 print(tickers.sector.value_counts(sort=True, ascending=False))
-
-# sweep temp files
-for f in ["./Indices Constituent.xls", "./szse_stock_list.xlsx"]:
-    try:
-        os.remove(f)
-    except:
-        print("temp file", f, "not there... moving on")
-print("done sweeping temp files, tickers are stored in db")
