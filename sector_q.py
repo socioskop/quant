@@ -1,11 +1,16 @@
 # program to develop MAs for percentile positions within sectors
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import os
 import pandas as pd
 import sqlite3
 import numpy as np
 import talib
 
 # connect to database (will be created on first run)
-conn   = sqlite3.connect('quant.db')
+conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
 cursor = conn.cursor()
 
 # load list of tickers to retrieve data for
@@ -24,7 +29,7 @@ d = d.sort_values(by="date")
 z = pd.DataFrame(dates, columns=["date"])   # sector performances
 
 for sector in set(sectors):
-    print(sector)
+    print(sector+" in progress")
     s = pd.DataFrame(dates, columns=["date"])
     s = s.sort_values(by="date")
 
@@ -33,7 +38,6 @@ for sector in set(sectors):
     if len(sectics)==0:
         continue
     for ticker in sectics:
-        print(ticker)
         tmp = raw.loc[raw["ticker"]==ticker, ["date", "adjClose"]]
         tmp.columns = ["date", ticker]
         tmp = tmp.groupby('date').last()                    # avoid data errors to blow up rows/memory/merging
