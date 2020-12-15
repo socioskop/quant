@@ -1,5 +1,9 @@
 # program to fetch raw pricing data for tickers through tiingo interface
 # saves data in sqlite table 'raw'
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import tiingo as tngo
 import os
 import env_file
@@ -9,14 +13,10 @@ import pandas as pd
 from datetime import datetime
 
 # connect to database (will be created on first run)
-conn   = sqlite3.connect('quant.db')
+conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
 cursor = conn.cursor()
 
-# add keys and other local environment variables manually
-env_file.load('.env')
-
 # open tiingo session - keep key as export in ./.env
-print("Tiingo key ok? :", len(os.environ['TIINGO_API_KEY'])>0)
 config = {} # Tiingo session configuration dictionary
 config['session'] = True # stay in session across api calls
 config['api_key'] = os.environ['TIINGO_API_KEY']
@@ -25,6 +25,7 @@ client = tngo.TiingoClient(config)
 # load list of tickers to retrieve data for
 tickers = pd.read_sql_query("SELECT * FROM tickers", conn)
 ts = pd.Series(tickers.ticker.unique())
+ts = ts.append(pd.Series(["SPY", "GLD", "XLK", "DIA", "XLV", "XLF", "XLY", "SDY", "MDY", "XLI", "XLP", "XLU", "JNK", "XLC", "XLE", "SPYG", "XBI"]), ignore_index=True)
 
 # touch sql storage
 # wipe data once a week
