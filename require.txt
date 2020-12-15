@@ -1,0 +1,13 @@
+python-dotenv
+path.py
+pandas
+numpy
+env_file
+tiingo
+quandl
+yfinance
+datetime
+pytrends
+TA-Lib
+xlrd
+openpyxl
