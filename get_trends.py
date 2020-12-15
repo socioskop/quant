@@ -1,7 +1,10 @@
 # getting google trend data for supplementary macro signals
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import re
 import os
-import env_file
 import sqlite3
 import pandas as pd
 import tiingo as tngo
@@ -11,14 +14,10 @@ from pytrends import dailydata
 from pytrends.request import TrendReq
 
 # connect to database (will be created on first run)
-conn   = sqlite3.connect('quant.db', timeout=10)
+conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db', timeout=10)
 cursor = conn.cursor()
 
-# add keys and other local environment variables manually
-env_file.load('.env')
-
 # open tiingo session - keep key as export in ./.env
-print("Tiingo key ok? :", len(os.environ['TIINGO_API_KEY'])>0)
 config = {} # Tiingo session configuration dictionary
 config['api_key'] = os.environ['TIINGO_API_KEY']
 client = tngo.TiingoClient(config)
@@ -34,7 +33,7 @@ settings = {'wait': 2.5,
 # search terms
 terms = ["debt", "color", "stocks", "money", "oil", "war", "fine", "office",
          "credit", "inflation", "portfolio", "mortgage", "hedge", "derivatives",
-         "inflation", "housing", "loan", "unemployment", "payment",
+         "inflation", "housing", "loan", "unemployment", "payment", "celebration", "party",
          "cancer", "marriage", "sp500", "dow jones", "growth", "restaurant"]
 
 # SPX for reference y and for date index
@@ -52,6 +51,7 @@ else:
     d.to_sql('tmp', conn, if_exists='replace', index=True) # write all fresh spx data (and their dates)
 
     # create a temp table with only the data not already in gtrends
+    cursor.execute("DROP TABLE IF EXISTS fresh;")
     update = '''CREATE TABLE fresh AS
                 SELECT tmp.date, tmp.spx
                 FROM   tmp
@@ -65,7 +65,6 @@ else:
                 select date, spx
                 from fresh;'''
     cursor.execute(update)
-    cursor.execute("DROP TABLE IF EXISTS fresh;")
 
 # existing columns
 got_words = conn.execute('select * from gtrends')
@@ -135,10 +134,11 @@ for t in terms:
         pass
 
     # write to tmp sql table to enable merging on date match
+    tmp = tmp.loc[~tmp[trim_t].isnull()]
     tmp.to_sql('tmp', conn, if_exists='replace', index=True)
     print(tmp.tail(3))
 
-    update = 'update gtrends set ' + trim_t + ' = (select '+trim_t+' from tmp where tmp.date = gtrends.date);'
+    update = 'update gtrends set ' + trim_t + ' = (select '+trim_t+' from tmp where tmp.date = gtrends.date AND tmp.'+trim_t+' is not null);'
     cursor.execute(update)
 
 gtrends = pd.read_sql_query("SELECT * FROM gtrends", conn)
