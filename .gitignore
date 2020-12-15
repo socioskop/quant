@@ -1,6 +1,7 @@
 # Project exclude paths
-/venv/
-/R/
-/.idea/
+venv/
+.idea/
+R/*
 .env
 quant.bat
+!R/quant_funcs.R
