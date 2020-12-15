@@ -1,7 +1,10 @@
 # program to fetch macro data and combine in one data frame for learning input
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import quandl
 import os
-import env_file
 import pandas as pd
 import numpy as np
 import sqlite3
@@ -11,17 +14,13 @@ import talib
 from datetime import datetime
 
 # connect to database (will be created on first run)
-conn   = sqlite3.connect('quant.db')
+conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
 cursor = conn.cursor()
-
-# add keys and other local environment variables manually
-env_file.load('.env')
 
 # open quandl session - keep key as export in ./.env
 quandl.ApiConfig.api_key = os.environ['QUANDL_API_KEY']
 
 # open tiingo session - keep key as export in ./.env
-print("Tiingo key ok? :", len(os.environ['TIINGO_API_KEY'])>0)
 config = {} # Tiingo session configuration dictionary
 config['api_key'] = os.environ['TIINGO_API_KEY']
 client = tngo.TiingoClient(config)
@@ -43,10 +42,10 @@ span = span[["span"]] ## got it
 
 spx  = client.get_dataframe("SPY", startDate=dates["init"], endDate=dates["endd"])
 spx["spx"] = spx["adjClose"]
-spx = spx[["spx"]].apply(np.log)
+spx = spx[["spx"]] #.apply(np.log)
 
 vix = yf.Ticker("^VIX").history(start=dates["init"], end=dates["endd"])
-vix["vix"] = vix["Close"].apply(np.log)
+vix["vix"] = vix["Close"] #.apply(np.log)
 vix = vix[["vix"]]
 
 # merge together all macro data sources by datetime index
@@ -71,7 +70,7 @@ for v in d.columns[~d.columns.isin(["spx"])]:
         d[v + "_MA" + str(p).zfill(3)] = round(talib.MA(d[v], p)/d[v], 5)
 
 # write to sql database (overwrite)
-d.to_sql('macro', conn, if_exists='replace', index=False)
+d.to_sql('macro', conn, if_exists='replace', index=True)
 
 # check contents of db
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
