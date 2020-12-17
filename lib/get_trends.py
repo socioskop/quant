@@ -25,16 +25,18 @@ client = tngo.TiingoClient(config)
 # settings
 dates = {"init": "2005-01-01",
             "endd": datetime.today().strftime('%Y-%m-%d')}
-settings = {'wait': 2.5,
-            'now_time': 45,
-            'lookback': 90,
-            'first_year': 2017}
+settings = {'wait': 5,
+            'now_time': 35,
+            'lookback': 35,
+            'first_year': 2015}
 
 # search terms
 terms = ["debt", "color", "stocks", "money", "oil", "war", "fine", "office",
          "credit", "inflation", "portfolio", "mortgage", "hedge", "derivatives",
          "inflation", "housing", "loan", "unemployment", "payment", "celebration", "party",
-         "cancer", "marriage", "sp500", "dow jones", "growth", "restaurant"]
+         "cancer", "marriage", "sp500", "dow jones", "growth", "restaurant",
+         "game", "vacation", "stress", "credit card", "job", "used car", "disneyland",
+         "russell 2000", "etf"][0:4]
 
 # SPX for reference y and for date index
 d = client.get_dataframe("SPY", startDate=dates["init"], endDate=dates["endd"])
@@ -110,7 +112,7 @@ for t in terms:
 
         # pull old data, if its not before the first_year threshold
         tmp_get = dailydata.get_daily_data(t,
-                                           int(get_dates.str.slice(0, 4).min()), int(get_dates.str.slice(5, 7).min()),
+                                           int(get_dates.str.slice(0, 4).min()), 1,
                                            int(get_dates.str.slice(0, 4).max()), int(get_dates.str.slice(5, 7).max()),
                                            geo='', wait_time=settings['wait'])
         tmp = pd.concat([tmp_get[[t]], tmp_now[[t]]])   # stack with the current data
@@ -138,7 +140,8 @@ for t in terms:
     tmp.to_sql('tmp', conn, if_exists='replace', index=True)
     print(tmp.tail(3))
 
-    update = 'update gtrends set ' + trim_t + ' = (select '+trim_t+' from tmp where tmp.date = gtrends.date AND tmp.'+trim_t+' is not null);'
+    # update new rows in db
+    update = 'update gtrends set '+trim_t+' = (SELECT '+trim_t+' from tmp where date = gtrends.date) where EXISTS (SELECT '+trim_t+' FROM tmp where date = gtrends.date)'
     cursor.execute(update)
 
 gtrends = pd.read_sql_query("SELECT * FROM gtrends", conn)
