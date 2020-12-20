@@ -36,7 +36,7 @@ terms = ["debt", "color", "stocks", "money", "oil", "war", "fine", "office",
          "inflation", "housing", "loan", "unemployment", "payment", "celebration", "party",
          "cancer", "marriage", "sp500", "dow jones", "growth", "restaurant",
          "game", "vacation", "stress", "credit card", "job", "used car", "disneyland",
-         "russell 2000", "etf"][0:4]
+         "russell 2000", "etf", "xauusd"][0:24]
 
 # SPX for reference y and for date index
 d = client.get_dataframe("SPY", startDate=dates["init"], endDate=dates["endd"])
@@ -117,8 +117,12 @@ for t in terms:
                                            geo='', wait_time=settings['wait'])
         tmp = pd.concat([tmp_get[[t]], tmp_now[[t]]])   # stack with the current data
 
-    # rename keyword column to trimmed
-    tmp[[trim_t]] = tmp[[t]]
+        # rename keyword column to trimmed
+        tmp[[trim_t]] = tmp[[t]]
+
+    else:
+        tmp = tmp_now[[t]]
+        tmp[[trim_t]] = tmp[[t]]
 
     # approximate recent (last 36 hours) of gtrends and append to regular daily gtrend data
     try:
