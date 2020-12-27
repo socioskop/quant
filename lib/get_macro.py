@@ -6,7 +6,6 @@ load_dotenv()
 import quandl
 import os
 import pandas as pd
-import numpy as np
 import sqlite3
 import tiingo as tngo
 import yfinance as yf
@@ -70,7 +69,9 @@ for v in d.columns[~d.columns.isin(["spx"])]:
         d[v + "_MA" + str(p).zfill(3)] = round(talib.MA(d[v], p)/d[v], 5)
 
 # write to sql database (overwrite)
-d.to_sql('macro', conn, if_exists='replace', index=True)
+d = d.reset_index().rename(columns={"index": "date"})
+d = d.drop(columns=["cars", "clms", "perm", "awem", "ordr", "nrdr", "span", "spx"])
+d.to_sql('macro', conn, if_exists='replace', index=False)
 
 # check contents of db
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
