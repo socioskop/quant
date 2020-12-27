@@ -61,7 +61,7 @@ for sector in set(sectors):
     q["date"] = tmp["date"]
     del tmp
 
-    # sector performance indicator
+    # sector average deltas
     s[sector.replace(" ", "")] = s[sectics.ok].mean(axis=1)
     s = s[["date", sector.replace(" ", "")]]
 
@@ -89,8 +89,9 @@ for sector in set(sectors):
     z = z.sort_values(by="date")
 
 # write to sql database (overwrite)
-d.to_sql('sector_q', conn, if_exists='replace', index=False)
-z.to_sql('sector_z', conn, if_exists='replace', index=False)
+d.set_index("date")
+d.to_sql('sector_q', conn, if_exists='replace', index=True)
+z.to_sql('sector_z', conn, if_exists='replace', index=True)
 
 # check contents of db
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
