@@ -25,7 +25,7 @@ tickers = pd.DataFrame(client.list_tickers())
 # SPDRS+ indices
 indices = pd.DataFrame({'ticker': ["SPY", "GLD", "XLK", "DIA", "XLV", "XLF", "XLY", "SDY", "MDY", "XLI", "XLP", "XLU", "JNK", "XLC", "XLE", "SPYG", "XBI"]})
 indices["date"] = "1970-01-01"
-indices["name"] = "INDEX"
+indices["name"] = "INDX"
 
 # us sp500 tickers + historical sp500 entries
 sp500=pd.read_csv('https://raw.githubusercontent.com/leosmigel/analyzingalpha/master/sp500-historical-components-and-changes/sp500_history.csv',
@@ -45,10 +45,11 @@ sctrs   = pd.concat([spy, onev, oneo, oney])
 sctrs.columns   = sctrs.columns.str.lower()
 sctrs   = sctrs[["ticker", "sector"]]
 sctrs["sector"] = sctrs["sector"].replace(["Technology"], 'Information Technology')
+sctrs["sector"] = sctrs["sector"].replace(["Basic Materials"], 'Materials')
 
 # add INDEX as sector
 spdrs = pd.DataFrame({'ticker': indices["ticker"]})
-spdrs["sector"] = "INDEX"
+spdrs["sector"] = "INDX"
 sctrs = pd.concat([sctrs, spdrs]).drop_duplicates()
 sp500           = pd.merge(sp500[["name", "ticker", "universe"]],
                            sctrs, on="ticker").drop_duplicates()
