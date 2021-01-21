@@ -26,9 +26,9 @@ client = tngo.TiingoClient(config)
 dates = {"init": "2005-01-01",
             "endd": datetime.today().strftime('%Y-%m-%d')}
 settings = {'wait': 5,
-            'now_time': 35,
-            'lookback': 35,
-            'first_year': 2015}
+            'now_time': 25,
+            'lookback': 25,
+            'first_year': 2012}
 
 # search terms
 terms = ["debt", "color", "stocks", "money", "oil", "war", "fine", "office",
@@ -36,7 +36,7 @@ terms = ["debt", "color", "stocks", "money", "oil", "war", "fine", "office",
          "inflation", "housing", "loan", "unemployment", "payment", "celebration", "party",
          "cancer", "marriage", "sp500", "dow jones", "growth", "restaurant",
          "game", "vacation", "stress", "credit card", "job", "used car", "disneyland",
-         "russell 2000", "etf", "xauusd"][0:24]
+         "russell 2000"] #"etf", "xauusd"
 
 # SPX for reference y and for date index
 d = client.get_dataframe("SPY", startDate=dates["init"], endDate=dates["endd"])
@@ -104,7 +104,7 @@ for t in terms:
     # request gtrends data in monthly intervals
     tmp_now = dailydata.get_daily_data(t,
                                        int(now_dates.str.slice(0, 4).min()), int(now_dates.str.slice(5, 7).min()),
-                                       int(now_dates.str.slice(0, 4).min()), int(now_dates.str.slice(5, 7).max()),
+                                       int(now_dates.str.slice(0, 4).max()), int(now_dates.str.slice(5, 7).max()),
                                        geo='', wait_time=settings['wait'])
     tmp_now = tmp_now[[t]]
 
