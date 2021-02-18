@@ -9,8 +9,9 @@ import os
 import env_file
 import sqlite3
 import numpy as np
+import time
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # connect to database (will be created on first run)
 conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
@@ -29,7 +30,7 @@ ts = ts.append(pd.Series(["SPY", "GLD", "XLK", "DIA", "XLV", "XLF", "XLY", "SDY"
 
 # touch sql storage
 # wipe data once a week
-if datetime.today().weekday() == 5:
+if datetime.today().weekday() == 6:
     cursor.execute("DROP TABLE IF EXISTS raw;")
 
 touch = '''CREATE TABLE IF NOT EXISTS raw (
@@ -40,9 +41,7 @@ touch = '''CREATE TABLE IF NOT EXISTS raw (
 	    adjHigh     REAL,
 	    adjLow      REAL,
 	    adjVolume   REAL,
-	    divCash     REAL,
-	    outc25      REAL,
-	    outc50      REAL
+	    divCash     REAL
 	    );'''
 
 cursor.execute(touch)
@@ -65,8 +64,8 @@ for i in range(0, len(ts)):
     dates_covered = pd.to_datetime(dates_covered['date'], format='%Y-%m-%d')
 
     # wipe values once in a while to avoid missing adjustments or ticker switch
-    if datetime.today().weekday()!=5 and len(dates_covered)>500:
-        init_tmp = max(dates_covered)
+    if datetime.today().weekday()!=6 and len(dates_covered)>500:
+        init_tmp = max(dates_covered)-timedelta(5)
         if init_tmp.strftime('%Y-%m-%d')>=dates["endd"]:
             pass
         #d = d[-d["date"].isin(dates_covered)] # would be after data download
@@ -81,18 +80,16 @@ for i in range(0, len(ts)):
     d = d[['date', 'ticker', 'adjClose', 'adjHigh', 'adjLow', 'adjOpen', 'adjVolume', 'divCash']]
     d.sort_index(inplace=True)
 
-    # generate outcome columns
-    for o in [25, 50]:
-        d["outc"+str(o).zfill(2)] = np.log(d["adjClose"]/d["adjClose"].shift(-o))
-
     # write to local storage
     d.to_sql('raw', conn, if_exists="append", index=False)
 
     # status on raw data download
     if (i/100 == round(i/100)):
-        print("raw data for ticker ", ts[i], " is ok. (" + str(i), " of ", len(ts), ")", sep='')
+        print("raw data for ticker ", ts[i], " (" + str(i), " of ", len(ts), ") is ok at " + datetime.datetime.now(), sep='')
 
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 print(cursor.fetchall())
 
+# end
+time.sleep(10)
 print("done getting raw ticker data")
