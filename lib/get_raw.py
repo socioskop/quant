@@ -85,7 +85,7 @@ for i in range(0, len(ts)):
 
     # status on raw data download
     if (i/100 == round(i/100)):
-        print("raw data for ticker ", ts[i], " (" + str(i), " of ", len(ts), ") is ok at " + datetime.datetime.now(), sep='')
+        print("raw data for ticker ", ts[i], " (" + str(i), " of ", len(ts), ") is ok at " + str(datetime.now()), sep='')
 
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 print(cursor.fetchall())
