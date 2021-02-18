@@ -2,6 +2,6 @@
 venv/
 .idea/
 R/*
+tmp/*
 .env
 quant.bat
-!R/quant_funcs.R
