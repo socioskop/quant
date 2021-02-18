@@ -10,6 +10,7 @@ import sqlite3
 import tiingo as tngo
 import yfinance as yf
 import talib
+import time
 from datetime import datetime
 
 # connect to database (will be created on first run)
@@ -78,4 +79,5 @@ cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 print(cursor.fetchall())
 
 # end
+time.sleep(10)
 print("done getting macro data")
