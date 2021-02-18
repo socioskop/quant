@@ -8,6 +8,7 @@ import pandas as pd
 import sqlite3
 import numpy as np
 import talib
+import time
 
 # connect to database (will be created on first run)
 conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
@@ -69,8 +70,12 @@ for sector in set(sectors):
     u = []
     for p in [50, 200]:
         for ticker in sectics.ok:
-            q[ticker + "_q" + str(p).zfill(3)] = round(talib.MA(q[ticker+"_q"], p), 5)
-        unames = [t + "_q"+str(p).zfill(3) for t in sectics.ok]
+            try:
+                q[ticker + "_q" + str(p).zfill(3)] = round(talib.MA(q[ticker+"_q"], p), 5)
+            except:
+                pass
+        unames = pd.Series([t + "_q"+str(p).zfill(3) for t in sectics.ok])
+        unames = list(unames[unames.isin(q.columns)])
         tmp = q[["date"]+unames] #### Here: lær at bruge dictionary
         #u[str(p)] = q[["date"]+unames]
         tmp = pd.melt(tmp, id_vars=['date'], var_name='ticker', value_name="q"+str(p))
@@ -98,4 +103,5 @@ cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 print(cursor.fetchall())
 
 # end
-print("done getting sector q data")
+time.sleep(10)
+print("done preparing sector_q data")
