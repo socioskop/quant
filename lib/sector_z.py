@@ -7,6 +7,7 @@ import os
 import pandas as pd
 import sqlite3
 import talib
+import time
 
 # connect to database (will be created on first run)
 conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
@@ -40,3 +41,7 @@ for u in list(universes):
 # check out that things are as expected: sql tables are there
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
 print(cursor.fetchall())
+
+# end
+time.sleep(10)
+print("done preparing sector_z data")
