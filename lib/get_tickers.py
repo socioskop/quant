@@ -7,6 +7,7 @@ import tiingo as tngo
 import os
 import pandas as pd
 import sqlite3
+import time
 
 # connect to database (will be created on first run)
 conn   = sqlite3.connect(os.environ["DB_PATH"]+'/quant.db')
@@ -23,7 +24,8 @@ tickers = pd.DataFrame(client.list_tickers())
 
 # country wise ticker lists
 # SPDRS+ indices
-indices = pd.DataFrame({'ticker': ["SPY", "GLD", "XLK", "DIA", "XLV", "XLF", "XLY", "SDY", "MDY", "XLI", "XLP", "XLU", "JNK", "XLC", "XLE", "SPYG", "XBI"]})
+indices = pd.DataFrame({'ticker': ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLC", "XLU",
+                                   "SPY", "GLD", "DIA", "SDY", "MDY", "JNK", "SPYG", "XBI"]})
 indices["date"] = "1970-01-01"
 indices["name"] = "INDX"
 
@@ -79,3 +81,7 @@ print(cursor.fetchall())
 tickers = pd.read_sql_query("SELECT * FROM tickers", conn)
 print(tickers.universe.value_counts())
 print(tickers.sector.value_counts(sort=True, ascending=False))
+
+# end
+time.sleep(10)
+print("done getting ticker indices")
