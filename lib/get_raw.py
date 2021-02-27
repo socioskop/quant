@@ -26,7 +26,8 @@ client = tngo.TiingoClient(config)
 # load list of tickers to retrieve data for
 tickers = pd.read_sql_query("SELECT * FROM tickers", conn)
 ts = pd.Series(tickers.ticker.unique())
-ts = ts.append(pd.Series(["SPY", "GLD", "XLK", "DIA", "XLV", "XLF", "XLY", "SDY", "MDY", "XLI", "XLP", "XLU", "JNK", "XLC", "XLE", "SPYG", "XBI"]), ignore_index=True)
+ts = ts.append(pd.Series(["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLC", "XLU", "VOX",
+                          "SPY", "GLD", "DIA", "SDY", "MDY", "JNK", "SPYG", "XBI"]), ignore_index=True)
 
 # touch sql storage
 # wipe data once a week

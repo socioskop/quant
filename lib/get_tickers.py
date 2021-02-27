@@ -24,7 +24,7 @@ tickers = pd.DataFrame(client.list_tickers())
 
 # country wise ticker lists
 # SPDRS+ indices
-indices = pd.DataFrame({'ticker': ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLC", "XLU",
+indices = pd.DataFrame({'ticker': ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLC", "XLU", "VOX",
                                    "SPY", "GLD", "DIA", "SDY", "MDY", "JNK", "SPYG", "XBI"]})
 indices["date"] = "1970-01-01"
 indices["name"] = "INDX"
@@ -55,7 +55,12 @@ spdrs["sector"] = "INDX"
 sctrs = pd.concat([sctrs, spdrs]).drop_duplicates()
 sp500           = pd.merge(sp500[["name", "ticker", "universe"]],
                            sctrs, on="ticker").drop_duplicates()
+
+# drop 'Telecommunications', it's already covered in other sectors
+sp500 = sp500[~sp500.ticker.isin(["Telecommunications"])]
 sp500 = sp500.sort_values("ticker")
+
+
 
 # push sp500 universe ticker list to sql db
 sp500[sp500.ticker.isin(tickers.ticker)].to_sql('tickers', conn, if_exists='replace', index=False)

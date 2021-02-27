@@ -18,7 +18,7 @@ universes = {'SZSE500': ['NEnvironmentalProtection', 'KRealEstate', 'RMedia', 'B
                         'EConstruction', 'FWholesale&Retail', 'QPublicHealth', 'GTransportation', 'LBusinessSupport',
                         'AAgriculture', 'IIT', 'CManufacturing', 'JFinance'],
              'SP500':   ['InformationTechnology', 'Industrials', 'Materials', 'Financials', 'Utilities',
-                        'ConsumerStaples', 'HealthCare', 'Telecommunications', 'ConsumerDiscretionary', 'CommunicationServices',
+                        'ConsumerStaples', 'HealthCare', 'ConsumerDiscretionary', 'CommunicationServices',
                         'Energy', 'RealEstate']}
 
 # load sector data
